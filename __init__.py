@@ -46,15 +46,40 @@ for idx, playlist in enumerate(playlists['items']):
     print(idx, playlist['name'])
     if playlist['name'].lower() == "liked songs (public, managed)":
         selected_playlist = playlist['uri']
-        print(f"\nselected {playlist['name']}\n")
+        Print.colored(f"selected {playlist['name']}", "green")
+        break
 
 if not selected_playlist:
     selected_playlist = CLI.get_int("select album to add liked songs")
     selected_playlist = playlists['items'][selected_playlist]['uri']
 
-offset = 0
+cnt = 0
+
 while True:
-    # get 50 songs from liked songs
+    # get 50 songs from selected playlist
+    results = sp.playlist_items(playlist_id=selected_playlist, offset=0)
+
+    cnt += len(results['items'])
+    Print.rewrite("removed", cnt, "songs")
+    if not results['items']:
+        break
+
+    uris = []
+    for idx, item in enumerate(results['items']):
+        track = item['track']
+        cnt += 1
+        # print(idx + offset + 1, track['artists'][0]['name'], " – ", track['name'], track['uri'])
+        # Print.prettify(track)
+        uris.append(track['uri'])
+
+    # remove all songs from playlist
+    sp.playlist_remove_all_occurrences_of_items(selected_playlist, uris)
+
+offset = 0
+cnt = 0
+
+while True:
+    # get 50 songs from liked playlist
     results = sp.current_user_saved_tracks(limit=50, offset=offset)
     if not results['items']:
         break
@@ -62,7 +87,7 @@ while True:
     for idx, item in enumerate(results['items']):
         track = item['track']
         cnt = idx + offset + 1
-        #print(idx + offset + 1, track['artists'][0]['name'], " – ", track['name'], track['uri'])
+        # print(idx + offset + 1, track['artists'][0]['name'], " – ", track['name'], track['uri'])
         # Print.prettify(track)
         uris.append(track['uri'])
 
@@ -72,6 +97,6 @@ while True:
     # add songs to playlist
     sp.playlist_add_items(selected_playlist, uris, position=offset)
     Print.rewrite(f"processed {cnt} songs")
-    offset += 50
+    offset += len(results['items'])
 
 print(f"processed {cnt} songs")
