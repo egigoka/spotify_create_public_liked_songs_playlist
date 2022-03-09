@@ -78,6 +78,7 @@ while True:
 offset = 0
 cnt = 0
 
+File.delete("Liked songs.log")
 while True:
     # get 50 songs from liked playlist
     results = sp.current_user_saved_tracks(limit=50, offset=offset)
@@ -88,6 +89,7 @@ while True:
         track = item['track']
         cnt = idx + offset + 1
         # print(idx + offset + 1, track['artists'][0]['name'], " – ", track['name'], track['uri'])
+        File.write("Liked songs.log", track['artists'][0]['name'] + " – " + track['name'] + " " + track['uri'] + newline, mode="a")
         # Print.prettify(track)
         uris.append(track['uri'])
 
